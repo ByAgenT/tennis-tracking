@@ -1,9 +1,9 @@
 from keras.models import *
 from keras.layers import *
 
-def trackNet( n_classes ,  input_height, input_width ): # input_height = 360, input_width = 640
+def TrackNet( n_classes ,  input_height, input_width ): # input_height = 360, input_width = 640
 
-	imgs_input = Input(shape=(3,input_height,input_width))
+	imgs_input = Input(shape=(9,input_height,input_width))
 
 	#layer1
 	x = Conv2D(64, (3, 3), kernel_initializer='random_uniform', padding='same', data_format='channels_first' )(imgs_input)
@@ -114,7 +114,7 @@ def trackNet( n_classes ,  input_height, input_width ): # input_height = 360, in
 	x = ( BatchNormalization())(x)
 
 	o_shape = Model(imgs_input , x ).output_shape
-	print ("layer24 output shape:", o_shape[1],o_shape[2],o_shape[3])
+	print("layer24 output shape:", o_shape[1],o_shape[2],o_shape[3])
 	#layer24 output shape: 256, 360, 640
 
 	OutputHeight = o_shape[2]
@@ -137,7 +137,3 @@ def trackNet( n_classes ,  input_height, input_width ): # input_height = 360, in
 	model.summary()
 
 	return model
-
-
-
-

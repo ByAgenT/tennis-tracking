@@ -13,7 +13,7 @@ import time
 
 from sktime.datatypes._panel._convert import from_2d_array_to_nested
 from court_detector import CourtDetector
-from Models.tracknet import trackNet
+from Models.tracknet import TrackNet
 from TrackPlayers.trackplayers import *
 from utils import get_video_properties, get_dtype
 from detection import *
@@ -36,7 +36,7 @@ minimap = args.minimap
 bounce = args.bounce
 
 n_classes = 256
-save_weights_path = 'WeightsTracknet/model.1'
+save_weights_path = 'WeightsTracknet/model_tennis.h5'
 yolo_classes = 'Yolov3/yolov3.txt'
 yolo_weights = 'Yolov3/yolov3.weights'
 yolo_config = 'Yolov3/yolov3.cfg'
@@ -67,7 +67,7 @@ width, height = 640, 360
 img, img1, img2 = None, None, None
 
 # load TrackNet model
-modelFN = trackNet
+modelFN = TrackNet
 m = modelFN(n_classes, input_height=height, input_width=width)
 m.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['accuracy'])
 m.load_weights(save_weights_path)
@@ -95,6 +95,7 @@ detection_model = DetectionModel(dtype=dtype)
 
 # get videos properties
 fps, length, v_width, v_height = get_video_properties(video)
+print(f"fps: {fps} length: {length} v_width: {v_width} v_height: {v_height}")
 
 coords = []
 frame_i = 0
@@ -135,7 +136,10 @@ frame_i = 0
 
 last = time.time() # start counting 
 # while (True):
-for img in frames:
+for n, img in enumerate(frames):
+    if n < 3:
+      continue
+  
     print('Tracking the ball: {}'.format(round( (currentFrame / total) * 100, 2)))
     frame_i += 1
 
@@ -143,14 +147,21 @@ for img in frames:
     # img is the frame that TrackNet will predict the position
     # since we need to change the size and type of img, copy it to output_img
     output_img = img
+    imgPrev = frames[n - 1]
+    imgPrevPrev = frames[n - 2]
 
     # resize it
+    imgPrevPrev = cv2.resize(imgPrevPrev, (width, height))
+    imgPrev = cv2.resize(imgPrev, (width, height))
     img = cv2.resize(img, (width, height))
+
     # input must be float type
+    imgPrevPrev = imgPrevPrev.astype(np.float32)
+    imgPrev = imgPrev.astype(np.float32)
     img = img.astype(np.float32)
 
     # since the odering of TrackNet  is 'channels_first', so we need to change the axis
-    X = np.rollaxis(img, 2, 0)
+    X = np.concatenate([np.rollaxis(imgPrevPrev, 2, 0), np.rollaxis(imgPrev, 2, 0), np.rollaxis(img, 2, 0)], axis=0)
     # prdict heatmap
     pr = m.predict(np.array([X]))[0]
 
