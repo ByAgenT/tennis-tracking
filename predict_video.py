@@ -81,11 +81,6 @@ for i in range(0, 8):
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
 output_video = cv2.VideoWriter(output_video_path, fourcc, fps, (output_width, output_height))
 
-# load yolov3 labels
-LABELS = open(yolo_classes).read().strip().split("\n")
-# yolo net
-net = cv2.dnn.readNet(yolo_weights, yolo_config)
-
 # court
 court_detector = CourtDetector()
 
@@ -108,13 +103,18 @@ while True:
 
   if ret:
     if frame_i == 1:
+      # In first video frame we try to detect the court
       print('Detecting the court and the players...')
       lines = court_detector.detect(frame)
-    else: # then track it
+    else:
+      # For all other frames we no longer need to detect court, only keep track
       lines = court_detector.track_court(frame)
+
+    # Detect players
     detection_model.detect_player_1(frame, court_detector)
     detection_model.detect_top_persons(frame, court_detector, frame_i)
-    
+
+    # Draw court lines in output video
     for i in range(0, len(lines), 4):
       x1, y1, x2, y2 = lines[i],lines[i+1], lines[i+2], lines[i+3]
       cv2.line(frame, (int(x1),int(y1)),(int(x2),int(y2)), (0,0,255), 5)
@@ -122,12 +122,12 @@ while True:
     frames.append(new_frame)
   else:
     break
+
 video.release()
-print('Finished!')
 
 detection_model.find_player_2_box()
 
-# second part 
+# Save player boxes
 player1_boxes = detection_model.player_1_boxes
 player2_boxes = detection_model.player_2_boxes
 

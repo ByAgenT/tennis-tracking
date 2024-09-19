@@ -8,6 +8,7 @@ import pandas as pd
 from scipy import signal
 import imutils
 
+from torchvision.models.detection.faster_rcnn import FasterRCNN_ResNet50_FPN_Weights
 from court_detector import CourtDetector
 from sort import Sort
 from utils import get_video_properties, get_dtype
@@ -16,7 +17,7 @@ import matplotlib.pyplot as plt
 
 class DetectionModel:
     def __init__(self, dtype=torch.FloatTensor):
-        self.detection_model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
+        self.detection_model = torchvision.models.detection.fasterrcnn_resnet50_fpn(weights=FasterRCNN_ResNet50_FPN_Weights.DEFAULT)
         self.detection_model.type(dtype)  # Also moves model to GPU if available
         self.detection_model.eval()
         self.dtype = dtype
